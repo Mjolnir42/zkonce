@@ -23,7 +23,7 @@ func validDuration(per *string) {
 	case `day`, `hour`:
 		duration = *per
 	default:
-		assertOK(fmt.Errorf("Invalid per duration -p|--per spec: %s", per))
+		assertOK(fmt.Errorf("Invalid per duration -p|--per spec: %s", *per))
 	}
 }
 
