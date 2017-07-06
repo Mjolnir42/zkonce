@@ -3,11 +3,19 @@
 #
 all: freebsd linux man
 
-freebsd:
+freebsd: validate
 	@env GOOS=freebsd GOARCH=amd64 go install -ldflags "-X main.zkonceVersion=`git rev-parse --short HEAD`"
 
-linux:
+linux: validate
 	@env GOOS=linux GOARCH=amd64 go install -ldflags "-X main.zkonceVersion=`git rev-parse --short HEAD`"
 
 man: freebsd linux
 	@${GOPATH}/bin/zkonce --create-manpage > zkonce.1
+
+validate:
+	@golint .
+	@go vet .
+	@go tool vet -shadow .
+	@ineffassign .
+	@codecoroner funcs .
+	@misspell .
