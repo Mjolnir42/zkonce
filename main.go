@@ -132,7 +132,7 @@ func run() int {
 	case <-errChan:
 		return 1
 	case <-leaderChan:
-		leader(conn, block)
+		go leader(conn, block)
 	}
 	if errorOK(<-block) {
 		return 1
