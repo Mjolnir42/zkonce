@@ -30,6 +30,7 @@ import (
 var startNode, finishNode, runLock string
 var fromStart, fromFinish bool
 var conf *Config
+var logInitialized bool
 
 func init() {
 	// Discard logspam from Zookeeper library
@@ -70,8 +71,9 @@ func main() {
 		logrus.Fatalf("Unable to open logfile: %s", err)
 	} else {
 		logrus.SetOutput(lfh)
+		logInitialized = true
 	}
-	logrus.Infoln(`Running zkonce`)
+	logrus.Infoln(`Starting zkonce`)
 
 	conn, chroot := connect(conf.Ensemble)
 	defer conn.Close()

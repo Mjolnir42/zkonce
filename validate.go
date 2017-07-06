@@ -9,6 +9,7 @@
 package main // import "github.com/mjolnir42/zkonce"
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 	"strconv"
@@ -21,19 +22,19 @@ func validDuration(per *string) {
 	switch *per {
 	case `day`, `hour`:
 	default:
-		logrus.Fatalf("Invalid per duration -p|--per spec: %s", per)
+		assertOK(fmt.Errorf("Invalid per duration -p|--per spec: %s", per))
 	}
 }
 
 func validJob(job *string) {
 	if *job == `` {
-		logrus.Fatalln(`Invalid empty jobname -j|--job`)
+		assertOK(fmt.Errorf(`Invalid empty jobname -j|--job`))
 	}
 }
 
 func validXOR(start, finish *bool) {
 	if *start && *finish {
-		logrus.Fatalln(`Can not start both from start and finish timestamp`)
+		assertOK(fmt.Errorf(`Can not start both from start and finish timestamp`))
 	}
 
 	// set default
@@ -60,15 +61,23 @@ func validUser() {
 		return
 	}
 	if uidCurrent != 0 {
-		logrus.Fatalf("Can only switch to %s(%d) as root", userJob.Username, uidJob)
+		assertOK(fmt.Errorf("Can only switch to %s(%d) as root", userJob.Username, uidJob))
 	}
 }
 
 func assertOK(err error) {
 	if err != nil {
-		spew.Dump(err)
-		logrus.Fatalf("ASSERT ERROR: %s", err.Error())
+		if logInitialized {
+			spew.Fdump(os.Stderr, err)
+			logrus.Fatalf("FATAL: %s", err.Error())
+		}
+		earlyAbort(fmt.Sprintf("FATAL: %s", err.Error()))
 	}
+}
+
+func earlyAbort(str string) {
+	fmt.Fprintln(os.Stderr, str)
+	os.Exit(1)
 }
 
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix
