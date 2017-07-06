@@ -219,16 +219,16 @@ func leader(conn *zk.Conn, block chan error) {
 	logrus.Infoln("Running command")
 
 	if conf.User != `` {
-		user, err := user.Lookup(conf.User)
-		if sendError(err, block) {
+		user, uerr := user.Lookup(conf.User)
+		if sendError(uerr, block) {
 			return
 		}
-		uid, err := strconv.Atoi(user.Uid)
-		if sendError(err, block) {
+		uid, uerr := strconv.Atoi(user.Uid)
+		if sendError(uerr, block) {
 			return
 		}
-		gid, err := strconv.Atoi(user.Gid)
-		if sendError(err, block) {
+		gid, uerr := strconv.Atoi(user.Gid)
+		if sendError(uerr, block) {
 			return
 		}
 		cmd.SysProcAttr = &syscall.SysProcAttr{
