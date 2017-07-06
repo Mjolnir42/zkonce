@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -86,83 +85,37 @@ func run() int {
 	defer conn.Close()
 	logrus.Infoln(`chroot:`, chroot)
 
-	flags := int32(0)
 	acl := zk.WorldACL(zk.PermAll)
 
-	chrootParts := strings.Split(chroot, `/`)
-	for i := range chrootParts {
-		p := filepath.Join(append(
-			[]string{`/`}, chrootParts[0:i+1]...)...)
-		if p == `/` {
-			continue
-		}
-		path, err := conn.Create(p, []byte{}, flags, acl)
-		if err != zk.ErrNodeExists {
-			assertOK(err)
-		}
-		if path != `` {
-			logrus.Infof("Created %s", path)
-		} else {
-			logrus.Infof("Path %s exists", p)
-		}
-	}
-	zkOncePath := filepath.Join(chroot, `/zkonce`)
-	path, err := conn.Create(zkOncePath, []byte{}, flags, acl)
-	if err != zk.ErrNodeExists {
-		assertOK(err)
-	}
-	if path != `` {
-		logrus.Infof("Created %s", path)
-	} else {
-		logrus.Infof("Path %s exists", zkOncePath)
-	}
-	zkOncePath = filepath.Join(zkOncePath, `/`, conf.SyncGroup)
-	path, err = conn.Create(zkOncePath, []byte{}, flags, acl)
-	if err != zk.ErrNodeExists {
-		assertOK(err)
-	}
-	if path != `` {
-		logrus.Infof("Created %s", path)
-	} else {
-		logrus.Infof("Path %s exists", zkOncePath)
+	// ensure fixed node hierarchy exists
+	if !zkHier(conn, filepath.Join(chroot, `zkonce`), true) {
+		return 1
 	}
 
-	startNode = filepath.Join(zkOncePath, `/start`)
-	path, err = conn.Create(startNode, []byte{}, flags, acl)
-	if err != zk.ErrNodeExists {
-		assertOK(err)
-	}
-	if path != `` {
-		logrus.Infof("Created %s", path)
-	} else {
-		logrus.Infof("Path %s exists", startNode)
+	// ensure required nodes exist
+	zkOncePath := filepath.Join(chroot, `zkonce`, conf.SyncGroup)
+	if !zkCreatePath(conn, zkOncePath, true) {
+		return 1
 	}
 
-	finishNode = filepath.Join(zkOncePath, `/finish`)
-	path, err = conn.Create(finishNode, []byte{}, flags, acl)
-	if err != zk.ErrNodeExists {
-		assertOK(err)
-	}
-	if path != `` {
-		logrus.Infof("Created %s", path)
-	} else {
-		logrus.Infof("Path %s exists", finishNode)
+	startNode = filepath.Join(zkOncePath, `start`)
+	if !zkCreatePath(conn, startNode, true) {
+		return 1
 	}
 
-	runLock = filepath.Join(zkOncePath, `/runlock`)
-	path, err = conn.Create(runLock, []byte{}, flags, acl)
-	if err != zk.ErrNodeExists {
-		assertOK(err)
+	finishNode = filepath.Join(zkOncePath, `finish`)
+	if !zkCreatePath(conn, finishNode, true) {
+		return 1
 	}
-	if path != `` {
-		logrus.Infof("Created %s", path)
-	} else {
-		logrus.Infof("Path %s exists", runLock)
+
+	runLock = filepath.Join(zkOncePath, `runlock`)
+	if !zkCreatePath(conn, finishNode, true) {
+		return 1
 	}
 
 	isLeader := false
 	election := filepath.Join(runLock, `zkonce-`)
-	path, err = conn.Create(election, []byte{}, int32(
+	path, err := conn.Create(election, []byte{}, int32(
 		zk.FlagEphemeral|zk.FlagSequence), acl)
 	assertOK(err)
 	logrus.Infof("Created %s", path)
