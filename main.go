@@ -7,6 +7,7 @@
  */
 
 package main // import "github.com/mjolnir42/zkonce"
+
 import (
 	"fmt"
 	"os"
