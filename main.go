@@ -41,6 +41,10 @@ func init() {
 }
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	// parse command line flags
 	cliConfPath := goopt.String([]string{`-c`, `--config`},
 		`/etc/zkonce/zkonce.conf`, `Configuration file`)
@@ -188,6 +192,7 @@ eventrecv:
 
 	<-time.After(60 * time.Second)
 	logrus.Infof("Shutting down")
+	return 0
 }
 
 func connect(cstr string) (*zk.Conn, string) {
