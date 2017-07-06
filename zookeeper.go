@@ -10,7 +10,9 @@ package main // import "github.com/mjolnir42/zkonce"
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -68,6 +70,59 @@ func zkCreatePath(conn *zk.Conn, path string, existsOK bool) bool {
 		logrus.Infof("Created zk node %s", createdPath)
 	}
 	return true
+}
+
+func zkLeaderLock(conn *zk.Conn) (chan struct{}, chan struct{}) {
+	leaderChannel := make(chan struct{})
+	errorChannel := make(chan struct{})
+	go func() {
+		hostname, err := os.Hostname()
+		if errorOK(err) {
+			close(errorChannel)
+		}
+
+		lockPath := filepath.Join(runLock, `zkonce-`)
+		ballot, err := conn.Create(lockPath, []byte(hostname), int32(
+			zk.FlagEphemeral|zk.FlagSequence), zk.WorldACL(zk.PermAll))
+		if errorOK(err) {
+			close(errorChannel)
+		}
+
+		// strip path from leader election ballot
+		_, ballot = filepath.Split(ballot)
+		logrus.Infof("Running leader election with ballot %s", ballot)
+
+		// get runLock children
+		children, _, event, err := conn.ChildrenW(runLock)
+		if errorOK(err) {
+			close(errorChannel)
+		}
+		sort.Strings(children)
+		if children[0] == ballot {
+			close(leaderChannel)
+			return
+		}
+		logrus.Infof("Ballot %s won the leader election", children[0])
+
+	eventrecv:
+		for {
+			ev := <-event
+			switch ev.Type {
+			case zk.EventNodeChildrenChanged:
+				children, _, event, err = conn.ChildrenW(runLock)
+				if errorOK(err) {
+					close(errorChannel)
+				}
+				sort.Strings(children)
+				if children[0] == ballot {
+					close(leaderChannel)
+					break eventrecv
+				}
+				logrus.Infof("Ballot %s won the leader election", children[0])
+			}
+		}
+	}()
+	return leaderChannel, errorChannel
 }
 
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix

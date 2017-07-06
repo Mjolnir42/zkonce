@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"syscall"
 	"time"
@@ -85,8 +84,6 @@ func run() int {
 	defer conn.Close()
 	logrus.Infoln(`Configured zookeeper chroot:`, chroot)
 
-	acl := zk.WorldACL(zk.PermAll)
-
 	// ensure fixed node hierarchy exists
 	if !zkHier(conn, filepath.Join(chroot, `zkonce`), true) {
 		return 1
@@ -113,35 +110,12 @@ func run() int {
 		return 1
 	}
 
-	isLeader := false
-	election := filepath.Join(runLock, `zkonce-`)
-	path, err := conn.Create(election, []byte{}, int32(
-		zk.FlagEphemeral|zk.FlagSequence), acl)
-	assertOK(err)
-	logrus.Infof("Created %s", path)
-
-	_, election = filepath.Split(path)
-
-	children, _, event, err := conn.ChildrenW(runLock)
-	sort.Strings(children)
-	if children[0] == election {
-		isLeader = true
+	leaderChan, errChan := zkLeaderLock(conn)
+	select {
+	case <-errChan:
+		return 1
+	case <-leaderChan:
 		leader(conn)
-	}
-
-eventrecv:
-	if !isLeader {
-		ev := <-event
-		switch ev.Type {
-		case zk.EventNodeChildrenChanged:
-			children, _, event, err = conn.ChildrenW(runLock)
-			sort.Strings(children)
-			if children[0] == election {
-				isLeader = true
-				leader(conn)
-			}
-			goto eventrecv
-		}
 	}
 
 	<-time.After(60 * time.Second)
