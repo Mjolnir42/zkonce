@@ -195,26 +195,6 @@ eventrecv:
 	return 0
 }
 
-func connect(cstr string) (*zk.Conn, string) {
-	var servers, chroot string
-	sr := strings.SplitN(cstr, `/`, 2)
-
-	switch len(sr) {
-	case 0:
-		assertOK(fmt.Errorf(`Empty zk ensemble!`))
-	case 1:
-		servers = sr[0]
-	case 2:
-		servers = sr[0]
-		chroot = `/` + sr[1]
-	}
-	zks := strings.Split(servers, `,`)
-	conn, _, err := zk.Connect(zks, 3*time.Second)
-	assertOK(err)
-
-	return conn, chroot
-}
-
 func leader(conn *zk.Conn) {
 	fmt.Println("I AM THE LEADER")
 	run := false
