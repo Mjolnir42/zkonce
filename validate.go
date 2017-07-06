@@ -75,9 +75,9 @@ func assertOK(err error) {
 	if err != nil {
 		if logInitialized {
 			spew.Fdump(os.Stderr, err)
-			logrus.Fatalf("FATAL: %s", err.Error())
+			logrus.Fatalf("%s", err.Error())
 		}
-		earlyAbort(fmt.Sprintf("FATAL: %s", err.Error()))
+		earlyAbort(fmt.Sprintf("%s", err.Error()))
 	}
 }
 
