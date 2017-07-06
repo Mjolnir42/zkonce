@@ -21,6 +21,12 @@ func validDuration(per *string) {
 	}
 }
 
+func validJob(job *string) {
+	if *job == `` {
+		logrus.Fatalln(`Invalid empty jobname -j|--job`)
+	}
+}
+
 func assertOK(err error) {
 	if err != nil {
 		spew.Dump(err)

@@ -47,10 +47,7 @@ func main() {
 		`day`, `Duration per which to run the command once`)
 	goopt.Parse(nil)
 
-
-	if *job == `` {
-		logrus.Fatalln(`Invalid empty jobname -j|--job`)
-	}
+	validJob(job)
 	validDuration(per)
 
 	// read runtime configuration
