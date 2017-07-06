@@ -79,7 +79,7 @@ func run() int {
 	// read runtime configuration
 	conf = &Config{}
 	if err := conf.FromFile(*cliConfPath); err != nil {
-		logrus.Fatalf("Could not open configuration: %s", err)
+		assertOK(fmt.Sprintf("Could not open configuration: %s", err))
 	}
 
 	// validate we can fork to the requested user
@@ -88,7 +88,7 @@ func run() int {
 
 	// setup logfile
 	if lfh, err := reopen.NewFileWriter(conf.LogFile); err != nil {
-		logrus.Fatalf("Unable to open logfile: %s", err)
+		assertOK(fmt.Sprintf("Unable to open logfile: %s", err))
 	} else {
 		logrus.SetOutput(lfh)
 		logInitialized = true
