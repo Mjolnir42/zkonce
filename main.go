@@ -83,7 +83,7 @@ func run() int {
 
 	conn, chroot := connect(conf.Ensemble)
 	defer conn.Close()
-	logrus.Infoln(`chroot:`, chroot)
+	logrus.Infoln(`Configured zookeeper chroot:`, chroot)
 
 	acl := zk.WorldACL(zk.PermAll)
 
