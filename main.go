@@ -181,13 +181,6 @@ eventrecv:
 	logrus.Infof("Shutting down")
 }
 
-func assertOK(err error) {
-	if err != nil {
-		spew.Dump(err)
-		logrus.Fatalf("ASSERT ERROR: %s", err.Error())
-	}
-}
-
 func connect(cstr string) (*zk.Conn, string) {
 	var servers, chroot string
 	sr := strings.SplitN(cstr, `/`, 2)
