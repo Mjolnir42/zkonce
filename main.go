@@ -179,7 +179,7 @@ func leader(conn *zk.Conn, block chan error) {
 	}
 
 	if !run {
-		logrus.Infoln("Not running since last run was at %s", lastTime.UTC().Format(time.RFC3339))
+		logrus.Infof("Not running since last run was at %s", lastTime.UTC().Format(time.RFC3339))
 		close(block)
 		return
 	}
