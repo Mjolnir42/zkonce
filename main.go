@@ -29,6 +29,7 @@ import (
 
 var startNode, finishNode, runLock string
 var fromStart, fromFinish bool
+var conf *Config
 
 func init() {
 	// Discard logspam from Zookeeper library
@@ -57,7 +58,7 @@ func main() {
 	validDuration(per)
 
 	// read runtime configuration
-	conf := Config{}
+	conf = &Config{}
 	if err := conf.FromFile(*cliConfPath); err != nil {
 		logrus.Fatalf("Could not open configuration: %s", err)
 	}
