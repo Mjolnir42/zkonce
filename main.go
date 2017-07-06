@@ -29,6 +29,7 @@ var fromStart, fromFinish bool
 var conf *Config
 var logInitialized bool
 var duration string
+var zkonceVersion string
 
 func init() {
 	// Discard logspam from Zookeeper library
@@ -36,6 +37,20 @@ func init() {
 
 	// set standard logger options
 	erebos.SetLogrusOptions()
+
+	// set goopt information
+	goopt.Version = zkonceVersion
+	goopt.Suite = `zkOnce`
+	goopt.Summary = `Coordinate distributed command execution per duration`
+	goopt.Author = `Jörg Pernfuß`
+	goopt.Description = func() string {
+		return "zkOnce can be used to coordinate the execution of a" +
+			" command between multiple hosts.\n\nIt enforces that the" +
+			" command only runs once per given time duration, either per" +
+			" calendar day or per clock hour.\n\nThis means a per-day job" +
+			" can run twice within seconds if the day changes inbetween" +
+			" or similarly for per-hour if the hour changes."
+	}
 }
 
 func main() {
