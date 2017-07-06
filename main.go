@@ -22,7 +22,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/client9/reopen"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/droundy/goopt"
 	"github.com/mjolnir42/erebos"
 	"github.com/samuel/go-zookeeper/zk"
