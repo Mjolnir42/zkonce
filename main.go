@@ -122,8 +122,6 @@ func run() int {
 	if errorOK(<-block) {
 		return 1
 	}
-
-	<-time.After(60 * time.Second)
 	logrus.Infof("Shutting down")
 	return 0
 }
