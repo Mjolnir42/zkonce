@@ -9,6 +9,10 @@
 package main // import "github.com/mjolnir42/zkonce"
 
 import (
+	"os"
+	"os/user"
+	"strconv"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -39,6 +43,25 @@ func validXOR(start, finish *bool) {
 	}
 	fromStart = *start
 	fromFinish = *finish
+}
+
+func validUser() {
+	// no user specified - run as current user
+	if conf.User == `` {
+		return
+	}
+	uidCurrent := os.Getuid()
+	userJob, err := user.Lookup(conf.User)
+	assertOK(err)
+	uidJob, err := strconv.Atoi(userJob.Uid)
+	assertOK(err)
+	// same user is not a problem
+	if uidCurrent == uidJob {
+		return
+	}
+	if uidCurrent != 0 {
+		logrus.Fatalf("Can only switch to %s(%d) as root", userJob.Username, uidJob)
+	}
 }
 
 func assertOK(err error) {

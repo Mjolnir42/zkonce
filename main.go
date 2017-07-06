@@ -63,6 +63,8 @@ func main() {
 		logrus.Fatalf("Could not open configuration: %s", err)
 	}
 
+	validUser()
+
 	// setup logfile
 	if lfh, err := reopen.NewFileWriter(conf.LogFile); err != nil {
 		logrus.Fatalf("Unable to open logfile: %s", err)
@@ -252,9 +254,6 @@ func leader(conn *zk.Conn) {
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
 	fmt.Println(`Running:`, cmdSlice)
 
-	// TODO: check current uid os.Getuid - only root can
-	// switch uids. also allow if specified user is current
-	// user.
 	user, err := user.Lookup(`nobody`)
 	assertOK(err)
 	uid, _ := strconv.Atoi(user.Uid)
