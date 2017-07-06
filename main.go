@@ -121,7 +121,7 @@ func run() int {
 	}
 
 	runLock = filepath.Join(zkOncePath, `runlock`)
-	if !zkCreatePath(conn, finishNode, true) {
+	if !zkCreatePath(conn, runLock, true) {
 		return 1
 	}
 
