@@ -1,6 +1,6 @@
 # WORK IN PROGRESS
 
-Do not touch. Slippery. Wet. Harmful. Not for oral consumation.
+Do not touch. Slippery. Wet. Harmful. Not for oral consumption.
 
 # zkonce
 

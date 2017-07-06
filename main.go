@@ -48,7 +48,7 @@ func init() {
 			" command between multiple hosts.\n\nIt enforces that the" +
 			" command only runs once per given time duration, either per" +
 			" calendar day or per clock hour.\n\nThis means a per-day job" +
-			" can run twice within seconds if the day changes inbetween" +
+			" can run twice within seconds if the day changes in between" +
 			" or similarly for per-hour if the hour changes."
 	}
 }
