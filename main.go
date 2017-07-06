@@ -30,6 +30,9 @@ import (
 var startNode, finishNode, runLock string
 
 func init() {
+	// Discard logspam from Zookeeper library
+	erebos.DisableZKLogger()
+
 	// set standard logger options
 	erebos.SetLogrusOptions()
 }
