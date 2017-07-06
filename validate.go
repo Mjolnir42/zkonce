@@ -86,4 +86,12 @@ func earlyAbort(str string) {
 	os.Exit(1)
 }
 
+func errorOK(err error) bool {
+	if err != nil {
+		logrus.Errorln(err)
+		return true
+	}
+	return false
+}
+
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix
