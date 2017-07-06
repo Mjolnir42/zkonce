@@ -35,3 +35,5 @@ _testmain.go
 attic/
 /zkonce
 /zkonce.1
+/zkonce.log
+/zkonce.conf
