@@ -9,7 +9,6 @@
 package main // import "github.com/mjolnir42/zkonce"
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
@@ -112,11 +111,16 @@ func run() int {
 	}
 
 	leaderChan, errChan := zkLeaderLock(conn)
+
+	block := make(chan error)
 	select {
 	case <-errChan:
 		return 1
 	case <-leaderChan:
-		leader(conn)
+		leader(conn, block)
+	}
+	if errorOK(<-block) {
+		return 1
 	}
 
 	<-time.After(60 * time.Second)
@@ -124,39 +128,67 @@ func run() int {
 	return 0
 }
 
-func leader(conn *zk.Conn) {
-	fmt.Println("I AM THE LEADER")
+func leader(conn *zk.Conn, block chan error) {
+	logrus.Infoln("Leader election has been won")
 	run := false
 
-	val, s, err := conn.Get(startNode)
-	assertOK(err)
-	version := s.Version
+	var lastRun []byte
+	var err error
+	var stat *zk.Stat
 
-	var startTime time.Time
-	if len(val) > 0 {
-		err = startTime.UnmarshalText(val)
-		assertOK(err)
+	switch {
+	case fromStart:
+		lastRun, stat, err = conn.Get(startNode)
+	case fromFinish:
+		lastRun, stat, err = conn.Get(finishNode)
+	}
+	if sendError(err, block) {
+		return
+	}
+	version := stat.Version
+
+	var lastTime time.Time
+	if len(lastRun) > 0 {
+		err = lastTime.UnmarshalText(lastRun)
+		if sendError(err, block) {
+			return
+		}
 	}
 
-	if startTime.IsZero() {
-		fmt.Println(`START TIME IS ZERO`)
+	now := time.Now().UTC()
+	if lastTime.IsZero() {
 		run = true
 	} else {
-		diff := time.Now().UTC().Sub(startTime)
-		if diff > time.Hour {
-			run = true
+		nowYear, nowMonth, nowDay := now.UTC().Date()
+		nowDate := time.Date(nowYear, nowMonth, nowDay, 0, 0, 0, 0, time.UTC)
+
+		lastYear, lastMonth, lastDay := lastTime.UTC().Date()
+		lastDate := time.Date(lastYear, lastMonth, lastDay, 0, 0, 0, 0, time.UTC)
+
+		switch duration {
+		case `day`:
+			if nowDate.After(lastDate) {
+				run = true
+			}
+		case `hour`:
+			// it must be a different hour if it is a different day
+			if nowDate.After(lastDate) {
+				run = true
+			} else if nowDate.Equal(lastDate) && now.UTC().Hour() > lastTime.UTC().Hour() {
+				run = true
+			}
 		}
 	}
 
 	if !run {
-		logrus.Infoln(`not running`)
+		logrus.Infoln("Not running since last run was at %s", lastTime.UTC().Format(time.RFC3339))
+		close(block)
 		return
 	}
 	nowTime := time.Now().UTC().Format(time.RFC3339Nano)
-	s, err = conn.Set(startNode, []byte(nowTime), version)
-	assertOK(err)
-	if s.Version > version {
-		logrus.Infoln(`startNode version increased to`, s.Version)
+	stat, err = conn.Set(startNode, []byte(nowTime), version)
+	if sendError(err, block) {
+		return
 	}
 
 	cmdSlice := []string{}
@@ -167,35 +199,49 @@ func leader(conn *zk.Conn) {
 		}
 	}
 	if len(cmdSlice) == 0 {
+		close(block)
 		return
 	}
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
-	fmt.Println(`Running:`, cmdSlice)
+	logrus.Infoln("Running command")
 
-	user, err := user.Lookup(`nobody`)
-	assertOK(err)
-	uid, _ := strconv.Atoi(user.Uid)
-	gid, _ := strconv.Atoi(user.Gid)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Credential: &syscall.Credential{
-			Uid:    uint32(uid),
-			Gid:    uint32(gid),
-			Groups: []uint32{},
-		},
+	if conf.User != `` {
+		user, err := user.Lookup(conf.User)
+		if sendError(err, block) {
+			return
+		}
+		uid, err := strconv.Atoi(user.Uid)
+		if sendError(err, block) {
+			return
+		}
+		gid, err := strconv.Atoi(user.Gid)
+		if sendError(err, block) {
+			return
+		}
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Credential: &syscall.Credential{
+				Uid:    uint32(uid),
+				Gid:    uint32(gid),
+				Groups: []uint32{},
+			},
+		}
 	}
-	out, err := cmd.Output()
-	assertOK(err)
-	fmt.Println(`Output:`, string(out))
+	err = cmd.Run()
+	if sendError(err, block) {
+		return
+	}
 
-	_, s, err = conn.Get(finishNode)
-	assertOK(err)
-	version = s.Version
+	_, stat, err = conn.Get(finishNode)
+	if sendError(err, block) {
+		return
+	}
+	version = stat.Version
 	nowTime = time.Now().UTC().Format(time.RFC3339Nano)
-	s, err = conn.Set(finishNode, []byte(nowTime), version)
-	assertOK(err)
-	if s.Version > version {
-		logrus.Infoln(`finishNode version increased to`, s.Version)
+	_, err = conn.Set(finishNode, []byte(nowTime), version)
+	if sendError(err, block) {
+		return
 	}
+	close(block)
 }
 
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix
