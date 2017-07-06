@@ -27,6 +27,20 @@ func validJob(job *string) {
 	}
 }
 
+func validXOR(start, finish *bool) {
+	if *start && *finish {
+		logrus.Fatalln(`Can not start both from start and finish timestamp`)
+	}
+
+	// set default
+	if !*start && !*finish {
+		fromStart = true
+		return
+	}
+	fromStart = *start
+	fromFinish = *finish
+}
+
 func assertOK(err error) {
 	if err != nil {
 		spew.Dump(err)

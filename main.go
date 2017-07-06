@@ -28,6 +28,7 @@ import (
 )
 
 var startNode, finishNode, runLock string
+var fromStart, fromFinish bool
 
 func init() {
 	// Discard logspam from Zookeeper library
@@ -45,8 +46,13 @@ func main() {
 		``, `Job name to run command under`)
 	per := goopt.String([]string{`-p`, `--per`},
 		`day`, `Duration per which to run the command once`)
+	start := goopt.Flag([]string{`-s`, `--from-start`}, []string{},
+		`Calculate duration from last start timestamp (default)`, ``)
+	finish := goopt.Flag([]string{`-f`, `--from-finish`}, []string{},
+		`Calculate duration from last finish timestamp`, ``)
 	goopt.Parse(nil)
 
+	validXOR(start, finish)
 	validJob(job)
 	validDuration(per)
 
