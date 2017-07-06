@@ -29,6 +29,7 @@ var startNode, finishNode, runLock string
 var fromStart, fromFinish bool
 var conf *Config
 var logInitialized bool
+var duration string
 
 func init() {
 	// Discard logspam from Zookeeper library
