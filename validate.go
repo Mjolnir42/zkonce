@@ -95,4 +95,12 @@ func errorOK(err error) bool {
 	return false
 }
 
+func sendError(err error, c chan error) bool {
+	if err != nil {
+		c <- err
+		return true
+	}
+	return false
+}
+
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix
