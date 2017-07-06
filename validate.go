@@ -32,6 +32,12 @@ func validJob(job *string) {
 	}
 }
 
+func validSyncGroup() {
+	if conf.SyncGroup == `` {
+		assertOK(fmt.Errorf(`Invalid empty sync.group in configuration`))
+	}
+}
+
 func validXOR(start, finish *bool) {
 	if *start && *finish {
 		assertOK(fmt.Errorf(`Can not start both from start and finish timestamp`))

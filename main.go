@@ -71,6 +71,7 @@ func run() int {
 
 	// validate we can fork to the requested user
 	validUser()
+	validSyncGroup()
 
 	// setup logfile
 	if lfh, err := reopen.NewFileWriter(conf.LogFile); err != nil {
