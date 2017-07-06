@@ -45,15 +45,11 @@ func main() {
 		`day`, `Duration per which to run the command once`)
 	goopt.Parse(nil)
 
-	switch *per {
-	case `day`, `hour`:
-	default:
-		logrus.Fatalln(`Invalid per duration -p|--per`)
-	}
 
 	if *job == `` {
 		logrus.Fatalln(`Invalid empty jobname -j|--job`)
 	}
+	validDuration(per)
 
 	// read runtime configuration
 	conf := Config{}

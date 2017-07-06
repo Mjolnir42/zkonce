@@ -13,6 +13,14 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+func validDuration(per *string) {
+	switch *per {
+	case `day`, `hour`:
+	default:
+		logrus.Fatalf("Invalid per duration -p|--per spec: %s", per)
+	}
+}
+
 func assertOK(err error) {
 	if err != nil {
 		spew.Dump(err)
