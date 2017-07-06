@@ -54,6 +54,7 @@ func main() {
 		`Calculate duration from last finish timestamp`, ``)
 	goopt.Parse(nil)
 
+	// validate cli input
 	validXOR(start, finish)
 	validJob(job)
 	validDuration(per)
@@ -64,6 +65,7 @@ func main() {
 		logrus.Fatalf("Could not open configuration: %s", err)
 	}
 
+	// validate we can fork to the requested user
 	validUser()
 
 	// setup logfile
