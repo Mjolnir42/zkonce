@@ -29,6 +29,7 @@ func connect(cstr string) (*zk.Conn, string) {
 		assertOK(fmt.Errorf(`Empty zk ensemble!`))
 	case 1:
 		servers = sr[0]
+		chroot = `/`
 	case 2:
 		servers = sr[0]
 		chroot = `/` + sr[1]
