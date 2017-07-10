@@ -111,6 +111,11 @@ func run() int {
 		return 1
 	}
 
+	zkOncePath = filepath.Join(zkOncePath, *job)
+	if !zkCreatePath(conn, zkOncePath, true) {
+		return 1
+	}
+
 	startNode = filepath.Join(zkOncePath, `start`)
 	if !zkCreatePath(conn, startNode, true) {
 		return 1
