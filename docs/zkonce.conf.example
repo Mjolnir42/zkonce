@@ -3,8 +3,13 @@ ensemble: '192.0.2.1:2181,192.0.2.2:2181,192.0.2.3:2181/chroot'
 # which sync group this host belongs to. identical jobs from the
 # same sync group contend for the same lock
 sync.group: example
-# logfile for zkonce
+# [DEPRECATED] logfile for zkonce
 log.file: /tmp/zkonce.log
+# path to put logfiles into
+log.path: /tmp
+# enable running one logfile per different job. If this is set
+# to true, then log.path is used instead of log.file
+log.per.job: true
 # user to run the command as. Leave empty to run the command as
 # the user that zkonce is started as. Only root can execute
 # commands as a different user.

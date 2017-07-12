@@ -23,6 +23,8 @@ type Config struct {
 	Ensemble  string `json:"ensemble"`
 	SyncGroup string `json:"sync.group"`
 	LogFile   string `json:"log.file"`
+	LogPath   string `json:"log.path"`
+	LogPerJob bool   `json:"log.per.job,string"`
 	User      string `json:"run.as.user"`
 }
 

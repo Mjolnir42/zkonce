@@ -88,7 +88,17 @@ func run() int {
 	validSyncGroup()
 
 	// setup logfile
-	if lfh, err := reopen.NewFileWriter(conf.LogFile); err != nil {
+	var logFilePath string
+	switch conf.LogPerJob {
+	case true:
+		logFilePath = filepath.Join(
+			conf.LogPath,
+			fmt.Sprintf("%s.log", *job),
+		)
+	default:
+		logFilePath = conf.LogFile
+	}
+	if lfh, err := reopen.NewFileWriter(logFilePath); err != nil {
 		assertOK(fmt.Errorf("Unable to open logfile: %s", err))
 	} else {
 		logrus.SetOutput(lfh)
