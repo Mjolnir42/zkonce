@@ -25,7 +25,7 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
-var startNode, finishNode, runLock string
+var startNode, finishNode, attemptNode, runLock string
 var fromStart, fromFinish bool
 var conf *Config
 var logInitialized bool
@@ -136,6 +136,11 @@ func run() int {
 		return 1
 	}
 
+	attemptNode = filepath.Join(zkOncePath, `attempt`)
+	if !zkCreatePath(conn, attemptNode, true) {
+		return 1
+	}
+
 	runLock = filepath.Join(zkOncePath, `runlock`)
 	if !zkCreatePath(conn, runLock, true) {
 		return 1
@@ -163,19 +168,22 @@ func leader(conn *zk.Conn, block chan error) {
 
 	var lastRun []byte
 	var err error
-	var stat *zk.Stat
 
 	switch {
 	case fromStart:
-		lastRun, stat, err = conn.Get(startNode)
+		lastRun, _, err = conn.Get(startNode)
 	case fromFinish:
-		lastRun, stat, err = conn.Get(finishNode)
+		lastRun, _, err = conn.Get(finishNode)
 	}
 	if sendError(err, block) {
 		return
 	}
-	version := stat.Version
 
+	// the official time for this run
+	now := time.Now().UTC()
+	nowTime := now.Format(time.RFC3339Nano)
+
+	// check if this run is eligible
 	var lastTime time.Time
 	if len(lastRun) > 0 {
 		err = lastTime.UnmarshalText(lastRun)
@@ -184,7 +192,6 @@ func leader(conn *zk.Conn, block chan error) {
 		}
 	}
 
-	now := time.Now().UTC()
 	if lastTime.IsZero() {
 		switch duration {
 		case `inf`:
@@ -193,10 +200,12 @@ func leader(conn *zk.Conn, block chan error) {
 		}
 	} else {
 		nowYear, nowMonth, nowDay := now.UTC().Date()
-		nowDate := time.Date(nowYear, nowMonth, nowDay, 0, 0, 0, 0, time.UTC)
+		nowDate := time.Date(nowYear, nowMonth, nowDay,
+			0, 0, 0, 0, time.UTC)
 
 		lastYear, lastMonth, lastDay := lastTime.UTC().Date()
-		lastDate := time.Date(lastYear, lastMonth, lastDay, 0, 0, 0, 0, time.UTC)
+		lastDate := time.Date(lastYear, lastMonth, lastDay,
+			0, 0, 0, 0, time.UTC)
 
 		switch duration {
 		case `day`:
@@ -215,13 +224,14 @@ func leader(conn *zk.Conn, block chan error) {
 	}
 
 	if !run {
-		logrus.Infof("Not running since last run was at %s", lastTime.UTC().Format(time.RFC3339))
+		logrus.Infof("Not running since last run was at %s",
+			lastTime.UTC().Format(time.RFC3339))
 		close(block)
 		return
 	}
-	nowTime := time.Now().UTC().Format(time.RFC3339Nano)
-	stat, err = conn.Set(startNode, []byte(nowTime), version)
-	if sendError(err, block) {
+
+	// record time of attempted run
+	if err = zkSet(conn, attemptNode, []byte(nowTime)); sendError(err, block) {
 		return
 	}
 
@@ -265,16 +275,18 @@ func leader(conn *zk.Conn, block chan error) {
 		return
 	}
 
-	_, stat, err = conn.Get(finishNode)
-	if sendError(err, block) {
+	// write attemptTime as startTime
+	if err = zkSet(conn, startNode, []byte(nowTime)); sendError(err, block) {
 		return
 	}
-	version = stat.Version
+
+	// write fresh nowTime as finishTime
 	nowTime = time.Now().UTC().Format(time.RFC3339Nano)
-	_, err = conn.Set(finishNode, []byte(nowTime), version)
-	if sendError(err, block) {
+	if err = zkSet(conn, finishNode, []byte(nowTime)); sendError(err, block) {
 		return
 	}
+
+	// unblock run()
 	close(block)
 }
 
