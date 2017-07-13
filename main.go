@@ -186,7 +186,11 @@ func leader(conn *zk.Conn, block chan error) {
 
 	now := time.Now().UTC()
 	if lastTime.IsZero() {
-		run = true
+		switch duration {
+		case `inf`:
+		default:
+			run = true
+		}
 	} else {
 		nowYear, nowMonth, nowDay := now.UTC().Date()
 		nowDate := time.Date(nowYear, nowMonth, nowDay, 0, 0, 0, 0, time.UTC)
@@ -206,6 +210,7 @@ func leader(conn *zk.Conn, block chan error) {
 			} else if nowDate.Equal(lastDate) && now.UTC().Hour() > lastTime.UTC().Hour() {
 				run = true
 			}
+		case `inf`:
 		}
 	}
 

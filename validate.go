@@ -20,7 +20,7 @@ import (
 
 func validDuration(per *string) {
 	switch *per {
-	case `day`, `hour`:
+	case `day`, `hour`, `inf`:
 		duration = *per
 	default:
 		assertOK(fmt.Errorf("Invalid per duration -p|--per spec: %s", *per))
