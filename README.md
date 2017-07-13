@@ -38,6 +38,3 @@ syncgroup: <name>
 zkonce -job <name> -per day|hour -from-start -- ${cmd}
 zkonce -job <name> -per day|hour -from-finish -- ${cmd}
 ```
-
-go doc syscall.SysProcAttr
-go doc syscall.Credential
