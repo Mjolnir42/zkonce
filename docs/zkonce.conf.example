@@ -14,3 +14,8 @@ log.per.job: true
 # the user that zkonce is started as. Only root can execute
 # commands as a different user.
 run.as.user: nobody
+# create a barrier file after running without an error. violating
+# the once-per condition is not an error.
+barrier.enabled: true|false
+# barrier file to create
+barrier.file: /run/zkonce.barrier

@@ -67,13 +67,13 @@ func run() int {
 	job := goopt.String([]string{`-j`, `--job`},
 		``, `Job name to run command under`)
 	per := goopt.String([]string{`-p`, `--per`},
-		`day`, `Duration per which to run the command once`)
+		`day`, `Duration per which to run the command once (hour|day|inf)`)
 	start := goopt.Flag([]string{`-s`, `--from-start`}, []string{},
 		`Calculate duration from last start timestamp (default)`, ``)
 	finish := goopt.Flag([]string{`-f`, `--from-finish`}, []string{},
 		`Calculate duration from last finish timestamp`, ``)
 	barrier := goopt.String([]string{`-b`, `--barrier`}, ``,
-		`Barrier file to create on success`)
+		`Barrier file to create on no-error`)
 	goopt.Parse(nil)
 
 	// validate cli input

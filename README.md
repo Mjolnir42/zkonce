@@ -37,6 +37,7 @@ syncgroup: <name>
 # Execute
 
 ```
-zkonce -job <name> -per day|hour|inf -from-start -- ${cmd}
-zkonce -job <name> -per day|hour|inf -from-finish -- ${cmd}
+zkonce --job <name> --per day|hour|inf --from-start -- ${cmd}
+zkonce --job <name> --per day|hour|inf --from-finish -- ${cmd}
+zkonce --job <name> --per inf --barrier /run/.zkonce.done -- ${cmd}
 ```
