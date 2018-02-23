@@ -72,6 +72,8 @@ func run() int {
 		`Calculate duration from last start timestamp (default)`, ``)
 	finish := goopt.Flag([]string{`-f`, `--from-finish`}, []string{},
 		`Calculate duration from last finish timestamp`, ``)
+	barrier := goopt.String([]string{`-b`, `--barrier`}, ``,
+		`Barrier file to create on success`)
 	goopt.Parse(nil)
 
 	// validate cli input
@@ -84,6 +86,10 @@ func run() int {
 	if err := conf.FromFile(*cliConfPath); err != nil {
 		assertOK(fmt.Errorf("Could not open configuration: %s", err))
 	}
+
+	// activate barrier configuration if a cli barrier was set
+	conf.BarrierEnabled = true
+	conf.BarrierFile = *barrier
 
 	// validate we can fork to the requested user
 	validUser()
