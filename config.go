@@ -20,12 +20,14 @@ import (
 // Config holds the runtime configuration which is expected to be
 // read from a UCL formatted file
 type Config struct {
-	Ensemble  string `json:"ensemble"`
-	SyncGroup string `json:"sync.group"`
-	LogFile   string `json:"log.file"`
-	LogPath   string `json:"log.path"`
-	LogPerJob bool   `json:"log.per.job,string"`
-	User      string `json:"run.as.user"`
+	Ensemble       string `json:"ensemble"`
+	SyncGroup      string `json:"sync.group"`
+	LogFile        string `json:"log.file"`
+	LogPath        string `json:"log.path"`
+	LogPerJob      bool   `json:"log.per.job,string"`
+	User           string `json:"run.as.user"`
+	BarrierFile    string `json:"barrier.file"`
+	BarrierEnabled bool   `json:"barrier.enabled,string"`
 }
 
 // FromFile sets Config c based on the file contents

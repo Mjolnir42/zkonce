@@ -103,4 +103,8 @@ func sendError(err error, c chan error) bool {
 	return false
 }
 
+func createBarrier(fileName string) {
+	os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0444)
+}
+
 // vim: ts=4 sw=4 sts=4 noet fenc=utf-8 ffs=unix

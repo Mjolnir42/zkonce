@@ -158,6 +158,9 @@ func run() int {
 	if errorOK(<-block) {
 		return 1
 	}
+	if conf.BarrierEnabled {
+		createBarrier(conf.BarrierFile)
+	}
 	logrus.Infof("Shutting down")
 	return 0
 }
