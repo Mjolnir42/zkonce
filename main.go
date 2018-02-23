@@ -9,7 +9,9 @@
 package main // import "github.com/mjolnir42/zkonce"
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -245,7 +247,12 @@ func leader(conn *zk.Conn, block chan error) {
 		close(block)
 		return
 	}
+	var stderr io.ReadCloser
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
+	if stderr, err = cmd.StderrPipe(); sendError(err, block) {
+		return
+	}
+
 	logrus.Infoln("Running command")
 
 	if conf.User != `` {
@@ -269,8 +276,23 @@ func leader(conn *zk.Conn, block chan error) {
 			},
 		}
 	}
-	err = cmd.Run()
-	if sendError(err, block) {
+
+	// start the command
+	if err = cmd.Start(); sendError(err, block) {
+		return
+	}
+
+	// log command stderr output
+	scanner := bufio.NewScanner(stderr)
+	for scanner.Scan() {
+		logrus.Errorln(scanner.Text())
+	}
+	if err = scanner.Err(); err != nil {
+		logrus.Errorln(err)
+		// no return here, ensure cmd.Wait is called
+	}
+
+	if err = cmd.Wait(); sendError(err, block) {
 		return
 	}
 
